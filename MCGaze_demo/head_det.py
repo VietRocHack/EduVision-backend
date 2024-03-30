@@ -1,10 +1,10 @@
 import sys
-sys.path.insert(0,'/data/yrguan/gaze/code/MCgaze/MCGaze_demo/yolo_head')
+sys.path.insert(0,'D:/LearningHood/conda/mcgaze/MCGaze_demo/yolo_head')
 from yolo_head.detect import det_head
 ## 构建字典，遍历每张图片
 import cv2
 import os
-cap = cv2.VideoCapture('/data/yrguan/gaze/code/MCgaze/MCGaze_demo/video_1.mp4')
+cap = cv2.VideoCapture('D:/LearningHood/conda/mcgaze/MCGaze_demo/test_video_2.mp4')
 
 def delete_files_in_folder(folder_path):
     # 检查文件夹是否存在
@@ -29,19 +29,19 @@ def delete_files_in_folder(folder_path):
     # 删除空文件夹
 
 
-delete_files_in_folder("MCGaze/MCGaze_demo/result/labels/")
-delete_files_in_folder("MCGaze/MCGaze_demo/frames/")
-delete_files_in_folder("MCGaze/MCGaze_demo/new_frames/")
+delete_files_in_folder("D:/LearningHood/conda/mcgaze/MCGaze_demo/result/labels/")
+delete_files_in_folder("D:/LearningHood/conda/mcgaze/MCGaze_demo/frames/")
+delete_files_in_folder("D:/LearningHood/conda/mcgaze/MCGaze_demo/new_frames/")
 frame_id = 0
 while   True:
     ret, frame = cap.read()
     if ret:
-        cv2.imwrite('MCGaze/MCGaze_demo/frames/%d.jpg' % frame_id, frame)
+        cv2.imwrite('D:/LearningHood/conda/mcgaze/MCGaze_demo/frames/%d.jpg' % frame_id, frame)
         frame_id += 1
     else:
         break
     
-imgset = 'MCGaze/MCGaze_demo/frames/*.jpg'
+imgset = 'D:/LearningHood/conda/mcgaze/MCGaze_demo/frames/*.jpg'
 det_head(imgset)
 
 
