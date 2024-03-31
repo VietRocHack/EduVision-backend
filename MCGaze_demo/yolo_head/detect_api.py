@@ -8,20 +8,29 @@ import torch.backends.cudnn as cudnn
 from numpy import random
 
 from models.experimental import attempt_load
-from utils.datasets import LoadStreams, OwnLoadImages
+from utils.datasets import LoadStreams, LoadImages
 from utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
     scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
 from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized
 
+print("setting up yolov5")
+set_logging()
 device = select_device('')
 model = attempt_load('D:/LearningHood/conda/mcgaze/MCGaze_demo/crowdhuman_yolov5m.pt', map_location=device)  # load FP32 model
 half = device.type != 'cpu'  # half precision only supported on CUDA
 if half:
     model.half()  # to FP16
 stride = int(model.stride.max())  # model stride
+# Get names and colors
+names = model.module.names if hasattr(model, 'module') else model.names
 
-def detect(opt, img_list):
+print(model)
+print("finished setting up yolov5")
+
+# colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
+
+def detect(opt, path):
   weights, view_img, save_txt, imgsz = opt.weights, opt.view_img, opt.save_txt, opt.img_size
   set_logging()
   # model = attempt_load(weights, map_location=device)  # load FP32 model
@@ -34,15 +43,13 @@ def detect(opt, img_list):
   #     modelc.load_state_dict(torch.load('weights/resnet101.pt', map_location=device)['model']).to(device).eval()
 
   # save_img = True
-  dataset = OwnLoadImages(img_list, img_size=imgsz, stride=stride)
-  # Get names and colors
-  names = model.module.names if hasattr(model, 'module') else model.names
-  # colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
+  dataset = LoadImages(path, img_size=imgsz, stride=stride)
+                    
   if device.type != 'cpu':
       model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
-                        
+
   t0 = time.time()
-  for img, im0s, vid_cap in dataset:
+  for _, img, im0s, vid_cap in dataset:
       img = torch.from_numpy(img).to(device)
       img = img.half() if half else img.float()  # uint8 to fp16/32
       img /= 255.0  # 0 - 255 to 0.0 - 1.0

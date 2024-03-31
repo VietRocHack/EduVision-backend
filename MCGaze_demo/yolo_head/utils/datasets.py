@@ -248,7 +248,10 @@ class OwnLoadImages:  # for inference
         else:
             # Read image
             self.count += 1
-            img0 = cv2.imread(image)  # BGR
+            # img0 = cv2.imread(image)  # BGR
+            img0 = image
+            print(type(image))
+            cv2.imshow(img0)
             assert img0 is not None, 'Image Not Found ' + image
             print(f'image {self.count}/{self.nf} {image}: ', end='')
 
