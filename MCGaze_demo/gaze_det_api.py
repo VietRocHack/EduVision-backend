@@ -128,6 +128,8 @@ def gaze_det(bboxes_data):
                   if j==(len(frame_id)-1):
                       clip['gaze_p'+str(i)] = np.concatenate(clip['gaze_p'+str(i)],axis=0)
 
+  projs_x = []
+  projs_y = []
   for vid_clip in video_clip_set:
       for i,frame_id in enumerate(vid_clip['frame_id']):  # 遍历每一帧
           img_name = str(vid_clip['frame_id'][i])
@@ -147,10 +149,17 @@ def gaze_det(bboxes_data):
               y = int(head_center[1]/w * max_y)
               z = int(slope * bbox_area / (w * h / num_boxes) + y_inter)
 
-              x_gaze = gaze[1]
-              y_gaze = gaze[0]
-              z_gaze = gaze[2]
+              # flip original vx and vy
+              vx = gaze[1]
+              vy = gaze[0]
+              vz = gaze[2]
 
+              if vz < 0:
+                proj_x = x + vx * (z / vz)
+                proj_y = y + vy * (z / vz)
+                if 0 <= proj_x <= 1000 and 0 <= proj_y <= 1000:
+                  projs_x.append(proj_x)
+                  projs_y.append(proj_y)
               # print(x,y,z)
               # print(gaze)
               # l = int(max(head_bboxes[3]-head_bboxes[1],head_bboxes[2]-head_bboxes[0])*1)
@@ -159,22 +168,24 @@ def gaze_det(bboxes_data):
               # cv2.arrowedLine(cur_img,(head_center[1],head_center[0]),
               #             (int(head_center[1]-gaze_len*gaze[0]),int(head_center[0]-gaze_len*gaze[1])),
               #             (230,253,11),thickness=thick)
-          cv2.imwrite(f'{main_path}/MCGaze_demo/new_frames/{frame_id}.jpg', cur_img)
-
-  img = cv2.imread(f'{main_path}/MCGaze_demo/new_frames/0.jpg')  #读取第一张图片
-  fps = 25
-  imgInfo = img.shape
-  size = (imgInfo[1],imgInfo[0])  #获取图片宽高度信息
-  print(size)
-  fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-  videoWrite = cv2.VideoWriter(f'{main_path}/MCGaze_demo/new_video.mp4',fourcc,fps,size)# 根据图片的大小，创建写入对象 （文件名，支持的编码器，25帧，视频大小（图片大小））
+          # cv2.imwrite(f'{main_path}/MCGaze_demo/new_frames/{frame_id}.jpg', cur_img)
+                
   
-  files = os.listdir(f'{main_path}/MCGaze_demo/new_frames/')
-  out_num = len(files)
-  for i in range(0,out_num):
-      fileName = f'{main_path}/MCGaze_demo/new_frames/'+str(i)+'.jpg'    #循环读取所有的图片,假设以数字顺序命名
-      img = cv2.imread(fileName)
+  return projs_x, projs_y
+  # img = cv2.imread(f'{main_path}/MCGaze_demo/new_frames/0.jpg')  #读取第一张图片
+  # fps = 25
+  # imgInfo = img.shape
+  # size = (imgInfo[1],imgInfo[0])  #获取图片宽高度信息
+  # print(size)
+  # fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+  # videoWrite = cv2.VideoWriter(f'{main_path}/MCGaze_demo/new_video.mp4',fourcc,fps,size)# 根据图片的大小，创建写入对象 （文件名，支持的编码器，25帧，视频大小（图片大小））
   
-      videoWrite.write(img)# 将图片写入所创建的视频对象
+  # files = os.listdir(f'{main_path}/MCGaze_demo/new_frames/')
+  # out_num = len(files)
+  # for i in range(0,out_num):
+  #     fileName = f'{main_path}/MCGaze_demo/new_frames/'+str(i)+'.jpg'    #循环读取所有的图片,假设以数字顺序命名
+  #     img = cv2.imread(fileName)
+  
+  #     videoWrite.write(img)# 将图片写入所创建的视频对象
 
-  videoWrite.release()
+  # videoWrite.release()

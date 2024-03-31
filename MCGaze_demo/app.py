@@ -4,9 +4,11 @@ import os
 
 from pyngrok import ngrok, conf
 from flask import Flask, request, jsonify
-# from yolo_head.detect_api import det_head
+from yolo_head.detect_api import det_head
 from gaze_det_api import gaze_det
 import cv2, json
+import matplotlib.pyplot as plt
+import numpy as np
 
 # init yolov5
 
@@ -72,23 +74,37 @@ def delete_files_in_folder(folder_path):
 
 def process(video_path):
   cap = cv2.VideoCapture(video_path)
-  # delete_files_in_folder("D:/LearningHood/conda/mcgaze/MCGaze_demo/result/labels/")
-  # delete_files_in_folder("D:/LearningHood/conda/mcgaze/MCGaze_demo/frames/")
-  # delete_files_in_folder("D:/LearningHood/conda/mcgaze/MCGaze_demo/new_frames/")
-  # frame_id = 0
-  # while   True:
-  #     ret, frame = cap.read()
-  #     if ret:
-  #         cv2.imwrite('D:/LearningHood/conda/mcgaze/MCGaze_demo/frames/%d.jpg' % frame_id, frame)
-  #         frame_id += 1
-  #     else:
-  #         break
+  delete_files_in_folder("D:/LearningHood/conda/mcgaze/MCGaze_demo/result/labels/")
+  delete_files_in_folder("D:/LearningHood/conda/mcgaze/MCGaze_demo/frames/")
+  delete_files_in_folder("D:/LearningHood/conda/mcgaze/MCGaze_demo/new_frames/")
+  frame_id = 0
+  while   True:
+      ret, frame = cap.read()
+      if ret:
+          cv2.imwrite('D:/LearningHood/conda/mcgaze/MCGaze_demo/frames/%d.jpg' % frame_id, frame)
+          frame_id += 1
+      else:
+          break
       
-  # imgset = 'D:/LearningHood/conda/mcgaze/MCGaze_demo/frames/*.jpg'
-  # bboxes_data = det_head(imgset)
+  imgset = 'D:/LearningHood/conda/mcgaze/MCGaze_demo/frames/*.jpg'
+  bboxes_data = det_head(imgset)
   # with open('data.json', 'w') as f:
   #   json.dump(bboxes_data, f)
-  bboxes_data = json.load(open('data.json'))
-  gaze_det(bboxes_data)
+  # bboxes_data = json.load(open('data.json'))
+  projs_x, projs_y = gaze_det(bboxes_data)
+
+  for i in range(len(projs_x)):
+      print(projs_x[i], projs_y[i])
+
+  heatmap, xedges, yedges = np.histogram2d(projs_x, projs_y, bins=50)
+
+  # Plot the heatmap
+  plt.imshow(heatmap.T, extent=[xedges[0], 1000, yedges[0], 1000], origin='lower', cmap='hot')
+  plt.colorbar(label='Counts')
+  plt.xlabel('X')
+  plt.ylabel('Y')
+  plt.title('Heatmap of views')
+  plt.savefig('heatmap.png')
+
 
 app.run()
