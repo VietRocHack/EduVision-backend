@@ -57,6 +57,7 @@ def detect(opt,save_img=False):
     if device.type != 'cpu':
         model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
     t0 = time.time()
+    bboxes_data = {}
     for path, img, im0s, vid_cap in dataset:
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
@@ -97,18 +98,22 @@ def detect(opt,save_img=False):
                 for *xyxy, conf, cls in reversed(det):
                     if save_txt:  # Write to file
                         line = (cls, *xyxy, conf) if opt.save_conf else (cls, *xyxy)  # label format
-                        with open(txt_path + '.txt', 'a') as f:
-                            f.write(('%g ' * len(line)).rstrip() % line + '\n')
+                        # with open(txt_path + '.txt', 'a') as f:
+                        #     f.write(('%g ' * len(line)).rstrip() % line + '\n')
+                        # print(('%g ' * len(line)).rstrip() % line + '\n')
+                        if p.stem not in bboxes_data:
+                            bboxes_data[p.stem] = ''
+                        bboxes_data[p.stem] += ('%g ' * len(line)).rstrip() % line + '\n'
 
-                    if save_img or view_img:  # Add bbox to image
-                        label = f'{names[int(cls)]} {conf:.2f}'
-                        if opt.heads or opt.person:
-                            if 'head' in label and opt.heads:
-                                plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
-                            if 'person' in label and opt.person:
-                                plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
-                        else:
-                            plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                    # if save_img or view_img:  # Add bbox to image
+                    #     label = f'{names[int(cls)]} {conf:.2f}'
+                    #     if opt.heads or opt.person:
+                    #         if 'head' in label and opt.heads:
+                    #             plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                    #         if 'person' in label and opt.person:
+                    #             plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                    #     else:
+                    #         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
 
             # Print time (inference + NMS)
             # print(f'{s}Done. ({t2 - t1:.3f}s)')
@@ -125,6 +130,7 @@ def detect(opt,save_img=False):
         
 
     print(f'Done. ({time.time() - t0:.3f}s)')
+    return bboxes_data
 
 
 
@@ -156,8 +162,9 @@ def det_head(img):
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
             for opt.weights in ['yolov5s.pt', 'yolov5m.pt', 'yolov5l.pt', 'yolov5x.pt']:
-                detect(opt, save_img=True)
+                bbobxes_data = detect(opt, save_img=True)
                 strip_optimizer(opt.weights)
+                return bbobxes_data
         else:
-            detect(opt, save_img=True)
+            return detect(opt, save_img=True)
 
