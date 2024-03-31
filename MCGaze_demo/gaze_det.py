@@ -141,7 +141,7 @@ imgInfo = img.shape
 size = (imgInfo[1],imgInfo[0])  #获取图片宽高度信息
 print(size)
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-videoWrite = cv2.VideoWriter(f'{main_path}/MCGaze_demo/new_video.mp4',fourcc,fps,size)# 根据图片的大小，创建写入对象 （文件名，支持的编码器，25帧，视频大小（图片大小））
+videoWrite = cv2.VideoWriter(f'{main_path}/MCGaze_demo/video_1.mp4',fourcc,fps,size)# 根据图片的大小，创建写入对象 （文件名，支持的编码器，25帧，视频大小（图片大小））
  
 files = os.listdir(f'{main_path}/MCGaze_demo/new_frames/')
 out_num = len(files)

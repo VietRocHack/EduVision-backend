@@ -121,14 +121,14 @@ def detect(opt,save_img=False):
 
             # Stream results
             if view_img:
-                cv2.imshow(str(p), im0)
-                cv2.waitKey(0)  # 1 millisecond
-
-
-
+                # cv2.imshow(str(p), im0)
+                # cv2.waitKey(0)  # 1 millisecond
+                cv2.imwrite(str(p), im0)
+                
     if save_txt or save_img:
         s = f"\n{len(list(save_dir.glob('labels/*.txt')))} labels saved to {save_dir / 'labels'}" if save_txt else ''
         print(f"Results saved to {save_dir}{s}")
+        
 
     print(f'Done. ({time.time() - t0:.3f}s)')
 
@@ -156,12 +156,13 @@ def det_head(img):
     parser.add_argument('--heads', action='store_true', help='displays only person')
     opt = parser.parse_args()
     opt.heads = True
+    opt.view_img = True
     print(opt)
 
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
             for opt.weights in ['yolov5s.pt', 'yolov5m.pt', 'yolov5l.pt', 'yolov5x.pt']:
-                detect(opt)
+                detect(opt, save_img=True)
                 strip_optimizer(opt.weights)
         else:
-            detect(opt)
+            detect(opt, save_img=True)

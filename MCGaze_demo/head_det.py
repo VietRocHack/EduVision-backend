@@ -4,7 +4,7 @@ from yolo_head.detect import det_head
 ## 构建字典，遍历每张图片
 import cv2
 import os
-cap = cv2.VideoCapture('D:/LearningHood/conda/mcgaze/MCGaze_demo/test_video_2.mp4')
+cap = cv2.VideoCapture('D:/LearningHood/conda/mcgaze/MCGaze_demo/video_1.mp4')
 
 def delete_files_in_folder(folder_path):
     # 检查文件夹是否存在
@@ -27,7 +27,6 @@ def delete_files_in_folder(folder_path):
             delete_files_in_folder(file_path)
     
     # 删除空文件夹
-
 
 delete_files_in_folder("D:/LearningHood/conda/mcgaze/MCGaze_demo/result/labels/")
 delete_files_in_folder("D:/LearningHood/conda/mcgaze/MCGaze_demo/frames/")
