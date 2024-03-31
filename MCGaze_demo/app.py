@@ -51,7 +51,7 @@ def process_video():
 def delete_files_in_folder(folder_path):
     # 检查文件夹是否存在
     if not os.path.exists(folder_path):
-        print(f"文件夹 '{folder_path}' 不存在")
+        # print(f"文件夹 '{folder_path}' 不存在")
         return
 
     # 获取文件夹中的所有文件和子文件夹
@@ -63,7 +63,7 @@ def delete_files_in_folder(folder_path):
         if os.path.isfile(file_path):
             # 如果是文件，删除它
             os.remove(file_path)
-            print(f"del_file: {file_path}")
+            # print(f"del_file: {file_path}")
         elif os.path.isdir(file_path):
             # 如果是文件夹，递归删除它
             delete_files_in_folder(file_path)
