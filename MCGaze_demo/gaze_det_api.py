@@ -63,7 +63,7 @@ def gaze_det(bboxes_data):
               video_clip['frame_id'].append(frame_id)
               for i in range(cur_person_num):
                   video_clip['p'+str(i)]=[face_bbox[i]]
-      else:
+      elif cur_person_num > 0:
           video_clip['frame_id'].append(frame_id)
           for i in range(cur_person_num):
                   video_clip['p'+str(i)].append(face_bbox[i])
@@ -130,6 +130,8 @@ def gaze_det(bboxes_data):
 
   projs_x = []
   projs_y = []
+  concentrating = 0
+  total = 1
   for vid_clip in video_clip_set:
       for i,frame_id in enumerate(vid_clip['frame_id']):  # 遍历每一帧
           img_name = str(vid_clip['frame_id'][i])
@@ -148,7 +150,7 @@ def gaze_det(bboxes_data):
               x = int((h - head_center[0])/h * max_x)
               y = int(head_center[1]/w * max_y)
               z = int(slope * bbox_area / (w * h / num_boxes) + y_inter)
-
+              total += 1
               # flip original vx and vy
               vx = gaze[1]
               vy = gaze[0]
@@ -160,6 +162,7 @@ def gaze_det(bboxes_data):
                 if 0 <= proj_x <= 1000 and 0 <= proj_y <= 1000:
                   projs_x.append(proj_x)
                   projs_y.append(proj_y)
+                  concentrating += 1
               # print(x,y,z)
               # print(gaze)
               # l = int(max(head_bboxes[3]-head_bboxes[1],head_bboxes[2]-head_bboxes[0])*1)
@@ -171,7 +174,7 @@ def gaze_det(bboxes_data):
           # cv2.imwrite(f'{main_path}/MCGaze_demo/new_frames/{frame_id}.jpg', cur_img)
                 
   
-  return projs_x, projs_y
+  return projs_x, projs_y, concentrating/total
   # img = cv2.imread(f'{main_path}/MCGaze_demo/new_frames/0.jpg')  #读取第一张图片
   # fps = 25
   # imgInfo = img.shape

@@ -4,6 +4,28 @@ import os
 
 from pyngrok import ngrok, conf
 from flask import Flask, request, jsonify
+import base64
+# import seaborn
+
+conf.get_default().auth_token = '2ePsRAhhGv5ishskgccKSakWQ5X_3LyjJKYy69UuoRthDPmpP'
+
+# Open a TCP ngrok tunnel to the SSH server
+connection_string = ngrok.connect("22", "tcp").public_url
+
+ssh_url, port = connection_string.strip("tcp://").split(":")
+print(f" * ngrok tunnel available, access with `ssh root@{ssh_url} -p{port}`")
+
+
+app = Flask(__name__)
+port = "5000"
+
+# Open a ngrok tunnel to the HTTP server
+public_url = ngrok.connect(port).public_url
+print(f" * ngrok tunnel \"{public_url}\" -> \"http://127.0.0.1:{port}\"")
+
+# Update any base URLs to use the public ngrok URL
+app.config["BASE_URL"] = public_url
+
 from yolo_head.detect_api import det_head
 from gaze_det_api import gaze_det
 import cv2, json
@@ -12,24 +34,6 @@ import numpy as np
 
 # init yolov5
 
-conf.get_default().auth_token = '2ePsRAhhGv5ishskgccKSakWQ5X_3LyjJKYy69UuoRthDPmpP'
-
-# Open a TCP ngrok tunnel to the SSH server
-# connection_string = ngrok.connect("22", "tcp").public_url
-
-# ssh_url, port = connection_string.strip("tcp://").split(":")
-# print(f" * ngrok tunnel available, access with `ssh root@{ssh_url} -p{port}`")
-
-
-app = Flask(__name__)
-port = "5000"
-
-# Open a ngrok tunnel to the HTTP server
-# public_url = ngrok.connect(port).public_url
-# print(f" * ngrok tunnel \"{public_url}\" -> \"http://127.0.0.1:{port}\"")
-
-# Update any base URLs to use the public ngrok URL
-# app.config["BASE_URL"] = public_url
 
 
 # Define Flask routes
@@ -39,16 +43,22 @@ def process_video():
         return jsonify({'error': 'No file part in the request'}), 400
     
     file = request.files['file']
-    
+    print(request.files)
     if file.filename == '':
         return jsonify({'error': 'No file selected for uploading'}), 400
     
-    video_path = os.path.join('./', 'uploaded_video.mp4')
+    video_path = os.path.join('./', 'uploaded_video.avi')
     file.save(video_path)
     # You can perform any processing on the video file here
-    process(video_path)
+    con_rate = process(video_path)
     
-    return jsonify({'message': 'Video processed successfully'}), 200
+    # Read the image file
+    with open('./heatmap.png', 'rb') as f:
+        image_data = f.read()
+    
+    # Encode image data as base64
+    image_base64 = base64.b64encode(image_data).decode('utf-8')
+    return jsonify({'con_rate': con_rate, 'image': image_base64}), 200
 
 
 def delete_files_in_folder(folder_path):
@@ -88,23 +98,18 @@ def process(video_path):
       
   imgset = 'D:/LearningHood/conda/mcgaze/MCGaze_demo/frames/*.jpg'
   bboxes_data = det_head(imgset)
-  # with open('data.json', 'w') as f:
-  #   json.dump(bboxes_data, f)
-  # bboxes_data = json.load(open('data.json'))
-  projs_x, projs_y = gaze_det(bboxes_data)
-
-  for i in range(len(projs_x)):
-      print(projs_x[i], projs_y[i])
+  projs_x, projs_y, con_rate = gaze_det(bboxes_data)
 
   heatmap, xedges, yedges = np.histogram2d(projs_x, projs_y, bins=50)
 
   # Plot the heatmap
-  plt.imshow(heatmap.T, extent=[xedges[0], 1000, yedges[0], 1000], origin='lower', cmap='hot')
-  plt.colorbar(label='Counts')
+  plt.imshow(heatmap.T, extent=[0, 1000, 0, 1000], origin='lower', cmap='hot')
+  # plt.colorbar(heatmap, cbar=False)
   plt.xlabel('X')
   plt.ylabel('Y')
   plt.title('Heatmap of views')
   plt.savefig('heatmap.png')
 
+  return con_rate
 
-app.run()
+app.run(debug=True)
